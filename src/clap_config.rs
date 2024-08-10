@@ -25,4 +25,5 @@ pub enum Commands {
     Add {
         option: Option<String>,
     },
+    Commit,
 }

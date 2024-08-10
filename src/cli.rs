@@ -1,4 +1,4 @@
-use inquire::MultiSelect;
+use inquire::{MultiSelect, Select};
 use std::process::Command;
 
 use crate::clap_config::{Cli, Commands};
@@ -7,24 +7,29 @@ use crate::llama::ask_llama;
 pub async fn handle_cli(cli: Cli) {
     match &cli.command {
         Commands::Ask { prompt } => {
-            process_ask(prompt.to_string()).await;
+            let msg = process_ask(prompt.to_string()).await;
+            println!("{}", msg);
         }
         Commands::Diff { commit1, commit2 } => {
-            process_diff(commit1.clone(), commit2.clone()).await;
+            let diff_msg = process_diff(commit1.clone(), commit2.clone()).await;
+            println!("{}", diff_msg);
         }
         Commands::Add { option } => {
             process_add(option).await;
         }
+        Commands::Commit => {
+            process_commit().await;
+        }
     }
 }
 
-async fn process_ask(prompt: String) {
+async fn process_ask(prompt: String) -> String {
     println!("{}", prompt);
     let response = ask_llama(prompt.to_string()).await.unwrap();
-    println!("{}", response);
+    response
 }
 
-async fn process_diff(commit1: Option<String>, commit2: Option<String>) {
+async fn process_diff(commit1: Option<String>, commit2: Option<String>) -> String {
     let (args, description) = prepare_diff_args_and_description(&commit1, &commit2);
 
     println!("{}", description);
@@ -41,7 +46,7 @@ async fn process_diff(commit1: Option<String>, commit2: Option<String>) {
     let response = ask_llama(prompt)
         .await
         .expect("Failed to get summary from LLaMA");
-    println!("{}", response);
+    response
 }
 
 fn prepare_diff_args_and_description<'a>(
@@ -114,4 +119,27 @@ fn add_to_staging(files: Vec<&str>) {
         .args(files)
         .output()
         .expect("Failed to execute git add");
+}
+
+async fn process_commit() {
+    let diff_msg = process_diff(Some("--staged".to_string()), Some("HEAD".to_string())).await;
+    let prompt = format!("Please read the following diff analysis for my changeset and based on it write me a commit message in around 15 words or less focussing only on major updates and just respond with msg only nothing else: {}", diff_msg);
+    let msg = ask_llama(prompt)
+        .await
+        .expect("Failed to get commit message from LLaMA");
+    println!("{}", msg);
+    let confirm = Select::new(
+        "Does the above commit msg looks good to you? Do you want to commit the changes?",
+        vec!["Yes", "No"],
+    )
+    .prompt()
+    .unwrap();
+    if confirm == "Yes" {
+        Command::new("git")
+            .args(&["commit", "-m", &msg])
+            .output()
+            .expect("Failed to execute git commit");
+    } else {
+        println!("You can write a commit message manually using `git commit -m 'msg'`");
+    }
 }
