@@ -1,6 +1,14 @@
-use tokio; // Import the Tokio runtime
+pub mod clap_config;
+pub mod cli;
+pub mod constants;
+pub mod llama;
 
-#[tokio::main] // Marks the entry point as an async function
+use clap::Parser;
+use clap_config::Cli;
+use cli::handle_cli;
+
+#[tokio::main]
 async fn main() {
-
+    let cli = Cli::parse();
+    handle_cli(cli).await;
 }

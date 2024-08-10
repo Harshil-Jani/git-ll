@@ -6,7 +6,7 @@
 - [ ] Offline AI-Powered Git Assistant to secure your data.
 - [ ] Craft concise and informative commit messages based on your code changes.
 - [ ] Comprehensive Diff analysis with AI-driven explanations and insights.
-- [ ] Ask your doubts for git, right in your terminal
+- [x] Ask your doubts for git, right in your terminal
 
 # Installation
 
@@ -16,7 +16,8 @@ Must : Ollama CLI installed and configured with LLaMA 3.1 model
 
 # Available commands:
 
-Will be adding soon
+- git-ll ask "How to merge two branches in git?"
+
 
 # Contributing
 We welcome contributions to git-ll! Please feel free to open issues or submit pull requests.
