@@ -1,0 +1,10 @@
+[package]
+name = "git_ai_cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.14", features = ["derive"] }
+indicatif = "0.17.8"
+ollama-rs = "=0.1.6"
+tokio = { version = "1.39.2", features = ["rt-multi-thread", "macros"] }
