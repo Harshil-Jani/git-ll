@@ -1,7 +1,15 @@
 [package]
-name = "git_ai_cli"
+name = "git_ll"
 version = "0.1.0"
 edition = "2021"
+authors = ["Harshil-Jani <harshiljani2002@gmail.com>"]
+license = "MIT"
+description = "git-ll is a command-line tool that integrates Git with the power of the LLaMA 3.1 language model"
+readme = "README.md"
+homepage = "https://github.com/Harshil-Jani/git-ll"
+repository = "https://github.com/Harshil-Jani/git-ll"
+keywords = ["cli", "ai", "git", "llama","intelligent"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 clap = { version = "4.5.14", features = ["derive"] }
