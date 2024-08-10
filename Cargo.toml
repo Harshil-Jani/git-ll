@@ -14,5 +14,6 @@ categories = ["command-line-utilities"]
 [dependencies]
 clap = { version = "4.5.14", features = ["derive"] }
 indicatif = "0.17.8"
+inquire = "0.7.5"
 ollama-rs = "=0.1.6"
 tokio = { version = "1.39.2", features = ["rt-multi-thread", "macros"] }

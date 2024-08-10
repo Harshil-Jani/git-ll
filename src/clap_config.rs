@@ -21,4 +21,8 @@ pub enum Commands {
         commit1: Option<String>,
         commit2: Option<String>,
     },
+    // git-ll add all
+    Add {
+        option: Option<String>,
+    },
 }

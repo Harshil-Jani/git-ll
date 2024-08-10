@@ -12,12 +12,14 @@
 
 Will be adding soon
 
-Must : Ollama CLI installed and configured with LLaMA 3.1 model
+Must : Ollama CLI installed and configured with LLaMA 3.1 model.
+Must : git CLI should be configured.
 
 # Available commands:
 
-- git-ll ask "How to merge two branches in git?"
-- git-ll diff <commit-1 : optional> <commit-2: optional>
+- ```git-ll ask "How to merge two branches in git?"```
+- ```git-ll diff <commit-1 : optional> <commit-2: optional>```
+- ```git-ll add```
 
 # Contributing
 We welcome contributions to git-ll! Please feel free to open issues or submit pull requests.

@@ -1,3 +1,4 @@
+use inquire::MultiSelect;
 use std::process::Command;
 
 use crate::clap_config::{Cli, Commands};
@@ -10,6 +11,9 @@ pub async fn handle_cli(cli: Cli) {
         }
         Commands::Diff { commit1, commit2 } => {
             process_diff(commit1.clone(), commit2.clone()).await;
+        }
+        Commands::Add { option } => {
+            process_add(option).await;
         }
     }
 }
@@ -42,24 +46,72 @@ async fn process_diff(commit1: Option<String>, commit2: Option<String>) {
 
 fn prepare_diff_args_and_description<'a>(
     commit1: &'a Option<String>,
-    commit2: &'a Option<String>
+    commit2: &'a Option<String>,
 ) -> (Vec<&'a str>, String) {
     match (commit1, commit2) {
         (Some(c1), Some(c2)) => (
             vec!["diff", &c1, &c2],
-            format!("Diffing commits {} and {}", c1, c2)
+            format!("Diffing commits {} and {}", c1, c2),
         ),
         (Some(c1), None) => (
             vec!["diff", &c1],
-            format!("Diffing commit {} with HEAD", c1)
+            format!("Diffing commit {} with HEAD", c1),
         ),
         (None, Some(c2)) => (
+            //This case is never gonna occur
             vec!["diff", "HEAD", &c2],
-            format!("Diffing HEAD with commit {}", c2)
+            format!("Diffing HEAD with commit {}", c2),
         ),
         (None, None) => (
             vec!["diff"],
-            "Diffing unstaged changes with HEAD".to_string()
+            "Diffing unstaged changes with HEAD".to_string(),
         ),
     }
+}
+
+async fn process_add(option: &Option<String>) {
+    match option {
+        Some(s) => {
+            match s.as_str() {
+                "all" | "." => {
+                    prepare_for_staging(true);
+                }
+                _ => {
+                    // Show error since we don't support other options
+                    println!("Invalid option. Do you mean 'git-ll add all' or `git-ll add .`?");
+                }
+            }
+        }
+        None => {
+            prepare_for_staging(false);
+        }
+    }
+}
+
+fn prepare_for_staging(all_files: bool) {
+    let output = Command::new("git")
+        .args(&["status", "--porcelain"])
+        .output()
+        .expect("Failed to execute git status");
+
+    let output_str = String::from_utf8_lossy(&output.stdout).to_string();
+
+    let files: Vec<&str> = output_str
+        .lines()
+        .map(|line| line.split_whitespace().last().unwrap())
+        .collect();
+
+    let mut selected_files = MultiSelect::new("Select files to add", files);
+    if all_files {
+        selected_files = selected_files.with_all_selected_by_default();
+    }
+    let selected_files = selected_files.prompt().unwrap();
+    add_to_staging(selected_files);
+}
+fn add_to_staging(files: Vec<&str>) {
+    Command::new("git")
+        .args(&["add"])
+        .args(files)
+        .output()
+        .expect("Failed to execute git add");
 }
