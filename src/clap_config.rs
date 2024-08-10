@@ -13,5 +13,12 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     // git-ll ask "How do I merge two branches locally in git?"
-    Ask { prompt: String },
+    Ask {
+        prompt: String,
+    },
+    // git-ll diff (optional : commit1 : commit2)
+    Diff {
+        commit1: Option<String>,
+        commit2: Option<String>,
+    },
 }
