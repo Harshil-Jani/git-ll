@@ -2,6 +2,26 @@ use crate::constants::LLAMA_MODEL_VERSION;
 use indicatif::{ProgressBar, ProgressStyle};
 use ollama_rs::{generation::completion::request::GenerationRequest, Ollama};
 use std::time::Duration;
+use std::process::Command;
+
+pub fn check_ollama_setup() -> Result<(), Box<dyn std::error::Error>> {
+    // Check if ollama is installed
+    let ollama_installed = Command::new("ollama").arg("--version").output().is_ok();
+    if !ollama_installed {
+        return Err("Ollama is not installed".into());
+    }
+
+    // Check if the model server is running
+    let server_running = Command::new("curl")
+        .arg("http://localhost:11434")
+        .output()
+        .is_ok();
+    if !server_running {
+        return Err("Model server is not running".into());
+    }
+
+    Ok(())
+}
 
 pub async fn ask_llama(prompt: String) -> Result<String, Box<dyn std::error::Error>> {
     // By default it will connect to localhost:11434

@@ -26,4 +26,8 @@ pub enum Commands {
         option: Option<String>,
     },
     Commit,
+    Checkout{
+        option: Option<String>,
+    },
+    Delete
 }

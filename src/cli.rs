@@ -2,24 +2,54 @@ use inquire::{MultiSelect, Select};
 use std::process::Command;
 
 use crate::clap_config::{Cli, Commands};
-use crate::llama::ask_llama;
+use crate::llama::{ask_llama, check_ollama_setup};
 
 pub async fn handle_cli(cli: Cli) {
     match &cli.command {
         Commands::Ask { prompt } => {
+            let check_ollama = check_ollama_setup();
+            match check_ollama {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("{}", e);
+                    return;
+                }
+            }
             let msg = process_ask(prompt.to_string()).await;
-            println!("{}", msg);
+            termimad::print_inline(&msg);
         }
         Commands::Diff { commit1, commit2 } => {
+            let check_ollama = check_ollama_setup();
+            match check_ollama {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("{}", e);
+                    return;
+                }
+            }
             let diff_msg = process_diff(commit1.clone(), commit2.clone()).await;
-            println!("{}", diff_msg);
+            termimad::print_inline(&diff_msg);
         }
         Commands::Add { option } => {
             process_add(option).await;
         }
         Commands::Commit => {
+            let check_ollama = check_ollama_setup();
+            match check_ollama {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("{}", e);
+                    return;
+                }
+            }
             process_commit().await;
         }
+        Commands::Checkout { option } => {
+            process_checkout(option).await; 
+        },
+        Commands::Delete => {
+            process_delete().await;
+        },
     }
 }
 
@@ -142,4 +172,83 @@ async fn process_commit() {
     } else {
         println!("You can write a commit message manually using `git commit -m 'msg'`");
     }
+}
+
+
+async fn process_checkout(option: &Option<String>) {
+    match option {
+        Some(s) => {
+            match s.as_str() {
+                "remote" => {
+                    checkout_branch(true);
+                }
+                "local" => {
+                    checkout_branch(false);
+                }
+                _ => {
+                    // Show error since we don't support other options
+                    println!("Invalid option. Do you mean 'git-ll checkout' or `git-ll checkout remote`?");
+                }
+            }
+        }
+        None => {
+            checkout_branch(false);
+        }
+    }
+}
+
+fn checkout_branch(remote : bool) {
+    let mut args = vec!["branch"];
+    
+    if remote {
+        args.push("-a");
+    }
+    
+    let output = Command::new("git")
+        .args(&args)
+        .output()
+        .expect("Failed to execute git command");
+
+    let output_str = String::from_utf8_lossy(&output.stdout).to_string();
+
+    let branches: Vec<&str> = output_str
+        .lines()
+        .map(|line| line.split_whitespace().last().unwrap())
+        .collect();
+
+    let selected_branch = Select::new("Select branch to checkout", branches).prompt().unwrap();
+
+    Command::new("git")
+        .args(&["checkout", selected_branch])
+        .output()
+        .expect("Failed to execute git checkout");
+
+    println!("Checked out to branch {}", selected_branch);
+}
+
+async fn process_delete() {
+    let output = Command::new("git")
+        .args(&["branch"])
+        .output()
+        .expect("Failed to execute git command");
+
+    let output_str = String::from_utf8_lossy(&output.stdout).to_string();
+
+    let branches: Vec<&str> = output_str
+        .lines()
+        .map(|line| line.split_whitespace().last().unwrap())
+        .collect();
+
+    let selected_branch = MultiSelect::new("Select branches to delete", branches).prompt().unwrap();
+
+    for branch in selected_branch
+    {
+        Command::new("git")
+        .args(&["branch", "-d", branch])
+        .output()
+        .expect("Failed to execute git branch delete");
+
+        println!("Deleted branch {}", branch);
+    }
+
 }
